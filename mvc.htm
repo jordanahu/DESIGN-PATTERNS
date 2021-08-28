@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<!--By Jordan-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MVC PATTERN</title>
+    
+
+<style>
+.container{
+    display: flex;
+    flex-wrap: wrap;
+
+}
+
+form{
+    display: flex;
+    flex-direction: column;
+   }
+form>*{
+    margin-bottom: 5px;
+}
+
+.text{
+    color: dodgerblue;
+    font-size: 20px;
+    padding: 12px;
+    font-weight: bold;
+    word-break: break-word;
+
+    }
+
+.textContainer{
+        background: lightgrey;
+        margin-bottom: 3px;
+        
+}
+
+[type=button]{
+    padding: 5px;
+    color: white;
+    background: dodgerblue;
+    font-weight: bold;
+    border-radius: 3px;
+}
+[type=button]:hover{
+    cursor: pointer;
+    filter: opacity(0.6)
+}
+
+#modelData{
+    margin-top: 10px;
+    margin-left: 20px;
+    align-self: center;
+
+
+}
+
+#modelData::before{
+    content: "DATA BASE";
+    font-size: 30px;
+    font-weight: bold;
+    background-color: dodgerblue;
+    color: white;
+    text-align: center;
+    border-radius: 3px;
+    padding: 5px 10px;
+    margin-bottom: 5px;
+    margin-right: auto;
+    margin-left: auto;
+    display: block;
+}
+
+
+
+</style>
+</head>
+<body>   
+    <div class="container">
+       <form class="d-flex flex-column">
+        <div class="p-2 w-25 mb-2 text-danger" id="message"></div>
+        <label>First Name: <input id="fname" type="text" name="name" ></label>
+         <label>Last Name: <input id="lname" type="text" name="name" ></label>
+         <input id="save" type="button" value="Save"/>
+         <input id="model" type="button" value="View the Database"/>
+         <input id="clear" type="button" value="Clear Screen"/>
+         <input id="reset" type="button" value="Reset"/>
+       </form>
+       <div id="modelData"></div>
+
+    <script>
+        //MODEL
+
+            var Model = (function(){
+                function model(fname, lname){
+                    this.fname = fname;
+                    this.lname = lname;
+                }
+
+                return model
+            }());
+
+
+
+            // VIEW
+            var View = (function(){
+                function view(model, controller){
+                    var self = this;
+                    self.model = model;
+                    self.controller = controller;
+                    var fname = document.getElementById("fname");
+                    var lname =  document.getElementById("lname");
+                    var saveBtn =  document.getElementById("save");
+                    var resetBtn =  document.getElementById("reset");
+                    var msgDiv = document.getElementById("message");
+                    var dbBtn = document.getElementById("model");
+                    var dbScreen = document.getElementById("clear")
+                    fname.value = model.fname;
+                    lname.value = model.lname;
+                    
+                    saveBtn.onclick = function(){
+                        var fname = document.getElementById("fname");
+                        var lname =  document.getElementById("lname");
+                        var data = {name:fname.value, surname:lname.value}
+                        self.controller.save(data)
+                    }
+
+                    dbScreen.onclick = function(){
+                        self.controller.wipeScreen()
+                    }
+
+                    dbBtn.onclick = function(){
+                        var dbDisplay = document.getElementById("modelData");
+                        var styleData = {el:"div", cls:{color:"text",bg:"textContainer"}}
+                        dbDisplay.appendChild(self.controller.createElem(styleData))
+                    }
+                    resetBtn.onclick = function(){
+                        self.clear()
+                    }
+
+
+                }
+
+                view.prototype.clear = function(){
+                     var fname = document.getElementById("fname");
+                    var lname =  document.getElementById("lname");
+                    fname.value="";
+                    lname.value="";
+                    this.message=""
+                }
+                Object.defineProperty(view.prototype, "message", {
+                    set:function(msg){
+                        var msgDiv = document.getElementById("message");
+                        msgDiv.innerHTML = msg;
+                    },
+                enumerable:true,
+                configurable:true
+                }
+                
+                )
+                return view
+            }());
+
+
+
+            //CONTROLLER
+            var Controller = (function(){
+                function controller(){
+                    this.initialize = function(model, view){
+                        this.model = model;
+                        this.view = view;
+                    }
+
+                    //FLUID INTERFACE FOR ADDING STYLES
+
+                    this.addStyle = function(elem){
+                        this.elem = elem;
+                        this.add = function(style){
+                            this.elem.classList.add(style)
+                            return this;
+                        }
+                    }
+
+                }
+
+                //SAVE DATA TO DATABASE
+                controller.prototype.save = function({name, surname}){
+
+                    if(name && surname){
+                        this.model.fname = name;
+                        this.model.lname = surname;
+                        this.view.message = "<strong style='color:green;font-weight:bold;font-size:25px'>Saved!</strong>"
+                    }else{
+                        this.view.message = "<strong style='color:red;font-weight:bold;'>Fill in the fields!</strong>"
+                    }
+                }
+
+                //CREATE NEW ELEMENT
+                controller.prototype.createElem = function({el, cls}){
+                    var elem = document.createElement(el)
+
+
+                    elem.innerText=JSON.stringify(this.model);
+                    
+                    var styledElem = new this.addStyle(elem);
+
+                    styledElem.add(cls.color).add(cls.bg)
+                   
+
+                    return elem;
+                }
+
+                //WIPE DATABASE SCREEN
+                controller.prototype.wipeScreen = function(){
+                    var screen = document.querySelectorAll(".text");
+                    [...screen].forEach(el=>el.style.display="none");
+                }
+
+                return controller;
+            }())
+        
+
+            window.onload = function(){
+                var model = new Model("Jordan", "Jam");
+                var controller = new Controller();
+                var view = new View(model, controller);
+                controller.initialize(model, view);
+            }
+
+    </script>
+
+    
+</body>
+</html>
